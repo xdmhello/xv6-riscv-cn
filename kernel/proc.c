@@ -20,15 +20,13 @@ static void freeproc(struct proc *p);
 
 extern char trampoline[]; // trampoline.S
 
-// helps ensure that wakeups of wait()ing
-// parents are not lost. helps obey the
-// memory model when using p->parent.
-// must be acquired before any p->lock.
+// 帮助确保等待中的父进程的唤醒不会丢失
+// 帮助在使用p->parent时遵守内存模型
+// 必须在获取任何p->lock之前获取
 struct spinlock wait_lock;
 
-// Allocate a page for each process's kernel stack.
-// Map it high in memory, followed by an invalid
-// guard page.
+// 为每个进程的内核栈分配一页
+// 将其映射到高内存，后面跟一个无效的保护页
 void
 proc_mapstacks(pagetable_t kpgtbl)
 {
@@ -43,7 +41,7 @@ proc_mapstacks(pagetable_t kpgtbl)
   }
 }
 
-// initialize the proc table.
+// 初始化进程表
 void
 procinit(void)
 {
@@ -58,9 +56,8 @@ procinit(void)
   }
 }
 
-// Must be called with interrupts disabled,
-// to prevent race with process being moved
-// to a different CPU.
+// 必须在禁用中断的情况下调用
+// 以防止与进程被移动到不同CPU的竞争
 int
 cpuid()
 {
@@ -68,8 +65,8 @@ cpuid()
   return id;
 }
 
-// Return this CPU's cpu struct.
-// Interrupts must be disabled.
+// 返回当前CPU的cpu结构
+// 必须禁用中断
 struct cpu*
 mycpu(void)
 {
@@ -78,7 +75,7 @@ mycpu(void)
   return c;
 }
 
-// Return the current struct proc *, or zero if none.
+// 返回当前进程的struct proc *，无进程时返回0
 struct proc*
 myproc(void)
 {
@@ -102,10 +99,10 @@ allocpid()
   return pid;
 }
 
-// Look in the process table for an UNUSED proc.
-// If found, initialize state required to run in the kernel,
-// and return with p->lock held.
-// If there are no free procs, or a memory allocation fails, return 0.
+// 在进程表中查找一个UNUSED状态的进程
+// 如果找到，初始化在内核中运行所需的状态
+// 并在持有p->lock的情况下返回
+// 如果没有空闲进程或内存分配失败，返回0
 static struct proc*
 allocproc(void)
 {
@@ -149,9 +146,9 @@ found:
   return p;
 }
 
-// free a proc structure and the data hanging from it,
-// including user pages.
-// p->lock must be held.
+// 释放进程结构及其关联的数据
+// 包括用户页面
+// 必须持有p->lock
 static void
 freeproc(struct proc *p)
 {
@@ -171,8 +168,8 @@ freeproc(struct proc *p)
   p->state = UNUSED;
 }
 
-// Create a user page table for a given process, with no user memory,
-// but with trampoline and trapframe pages.
+// 为给定进程创建用户页表，没有用户内存
+// 但包含trampoline和trapframe页面
 pagetable_t
 proc_pagetable(struct proc *p)
 {
@@ -205,8 +202,7 @@ proc_pagetable(struct proc *p)
   return pagetable;
 }
 
-// Free a process's page table, and free the
-// physical memory it refers to.
+// 释放进程的页表，并释放其引用的物理内存
 void
 proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
@@ -215,7 +211,7 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
   uvmfree(pagetable, sz);
 }
 
-// Set up first user process.
+// 设置第一个用户进程
 void
 userinit(void)
 {
@@ -231,8 +227,8 @@ userinit(void)
   release(&p->lock);
 }
 
-// Shrink user memory by n bytes.
-// Return 0 on success, -1 on failure.
+// 收缩用户内存n字节
+// 成功返回0，失败返回-1
 int
 growproc(int n)
 {
@@ -251,8 +247,8 @@ growproc(int n)
   return 0;
 }
 
-// Create a new process, copying the parent.
-// Sets up child kernel stack to return as if from fork() system call.
+// 创建一个新进程，复制父进程
+// 设置子进程内核栈，使其看起来像是从fork()系统调用返回
 int
 kfork(void)
 {
@@ -273,10 +269,10 @@ kfork(void)
   }
   np->sz = p->sz;
 
-  // copy saved user registers.
+  // 复制保存的用户寄存器
   *(np->trapframe) = *(p->trapframe);
 
-  // Cause fork to return 0 in the child.
+  // 使fork在子进程中返回0
   np->trapframe->a0 = 0;
 
   // increment reference counts on open file descriptors.
@@ -383,8 +379,8 @@ kwait(uint64 addr)
 
         havekids = 1;
         if(pp->state == ZOMBIE){
-          // Found one.
-          pid = pp->pid;
+          // 找到一个
+  pid = pp->pid;
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
