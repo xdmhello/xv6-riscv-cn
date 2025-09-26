@@ -34,7 +34,7 @@ void
 consputc(int c)
 {
   if(c == BACKSPACE){
-    // if the user typed backspace, overwrite with a space.
+    // 如果用户输入了退格键，用空格覆盖。
     uartputc_sync('\b'); uartputc_sync(' '); uartputc_sync('\b');
   } else {
     uartputc_sync(c);
@@ -89,8 +89,7 @@ consoleread(int user_dst, uint64 dst, int n)
   target = n;
   acquire(&cons.lock);
   while(n > 0){
-    // wait until interrupt handler has put some
-    // input into cons.buffer.
+    // 等待中断处理程序将一些输入放入cons.buffer。
     while(cons.r == cons.w){
       if(killed(myproc())){
         release(&cons.lock);
@@ -119,8 +118,7 @@ consoleread(int user_dst, uint64 dst, int n)
     --n;
 
     if(c == '\n'){
-      // a whole line has arrived, return to
-      // the user-level read().
+      // 一整行已到达，返回到用户级别的read()。
       break;
     }
   }

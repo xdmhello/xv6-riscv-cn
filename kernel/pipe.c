@@ -85,7 +85,7 @@ pipewrite(struct pipe *pi, uint64 addr, int n)
       release(&pi->lock);
       return -1;
     }
-    if(pi->nwrite == pi->nread + PIPESIZE){ //DOC: pipewrite-full
+    if(pi->nwrite == pi->nread + PIPESIZE){ //DOC: pipewrite-full 管道已满
       wakeup(&pi->nread);
       sleep(&pi->nwrite, &pi->lock);
     } else {
@@ -110,21 +110,21 @@ piperead(struct pipe *pi, uint64 addr, int n)
   char ch;
 
   acquire(&pi->lock);
-  while(pi->nread == pi->nwrite && pi->writeopen){  //DOC: pipe-empty
+  while(pi->nread == pi->nwrite && pi->writeopen){  //DOC: pipe-empty 管道为空
     if(killed(pr)){
       release(&pi->lock);
       return -1;
     }
-    sleep(&pi->nread, &pi->lock); //DOC: piperead-sleep
+    sleep(&pi->nread, &pi->lock); //DOC: piperead-sleep 在管道为空时睡眠
   }
-  for(i = 0; i < n; i++){  //DOC: piperead-copy
+  for(i = 0; i < n; i++){  //DOC: piperead-copy 复制数据到用户空间
     if(pi->nread == pi->nwrite)
       break;
     ch = pi->data[pi->nread++ % PIPESIZE];
     if(copyout(pr->pagetable, addr + i, &ch, 1) == -1)
       break;
   }
-  wakeup(&pi->nwrite);  //DOC: piperead-wakeup
+  wakeup(&pi->nwrite);  //DOC: piperead-wakeup 唤醒写入进程
   release(&pi->lock);
   return i;
 }

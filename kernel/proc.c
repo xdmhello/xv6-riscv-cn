@@ -404,7 +404,7 @@ kwait(uint64 addr)
     }
     
     // 等待子进程退出。
-    sleep(p, &wait_lock);  //DOC: wait-sleep
+    sleep(p, &wait_lock);  //DOC: wait-sleep 在等待子进程退出时睡眠
   }
 }
 
@@ -540,7 +540,7 @@ sleep(void *chan, struct spinlock *lk)
 // （wakeup会锁定p->lock），
 // 因此释放lk是安全的。
 
-  acquire(&p->lock);  //DOC: sleeplock1
+  acquire(&p->lock);  //DOC: sleeplock1 获取进程锁
   release(lk);
 
   // 进入睡眠状态。

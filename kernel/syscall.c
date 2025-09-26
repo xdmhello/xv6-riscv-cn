@@ -7,7 +7,7 @@
 #include "syscall.h"
 #include "defs.h"
 
-// Fetch the uint64 at addr from the current process.
+// 从当前进程中获取addr处的uint64值。
 int
 fetchaddr(uint64 addr, uint64 *ip)
 {
@@ -19,8 +19,8 @@ fetchaddr(uint64 addr, uint64 *ip)
   return 0;
 }
 
-// Fetch the nul-terminated string at addr from the current process.
-// Returns length of string, not including nul, or -1 for error.
+// 从当前进程中获取addr处的以null结尾的字符串。
+// 返回字符串长度（不包括null），或错误时返回-1。
 int
 fetchstr(uint64 addr, char *buf, int max)
 {
@@ -59,18 +59,18 @@ argint(int n, int *ip)
   *ip = argraw(n);
 }
 
-// Retrieve an argument as a pointer.
-// Doesn't check for legality, since
-// copyin/copyout will do that.
+// 将参数作为指针检索。
+// 不检查合法性，因为
+// copyin/copyout会处理这个。
 void
 argaddr(int n, uint64 *ip)
 {
   *ip = argraw(n);
 }
 
-// Fetch the nth word-sized system call argument as a null-terminated string.
-// Copies into buf, at most max.
-// Returns string length if OK (including nul), -1 if error.
+// 获取第n个字大小的系统调用参数作为以null结尾的字符串。
+// 复制到buf中，最多max个字符。
+// 成功返回字符串长度（包括null），错误返回-1。
 int
 argstr(int n, char *buf, int max)
 {
@@ -79,7 +79,7 @@ argstr(int n, char *buf, int max)
   return fetchstr(addr, buf, max);
 }
 
-// Prototypes for the functions that handle system calls.
+// 处理系统调用的函数原型。
 extern uint64 sys_fork(void);
 extern uint64 sys_exit(void);
 extern uint64 sys_wait(void);
@@ -102,8 +102,8 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 
-// An array mapping syscall numbers from syscall.h
-// to the function that handles the system call.
+// 将syscall.h中的系统调用编号映射到
+// 处理该系统调用的函数的数组。
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -136,8 +136,8 @@ syscall(void)
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Use num to lookup the system call function for num, call it,
-    // and store its return value in p->trapframe->a0
+    // 使用num查找对应编号的系统调用函数，调用它，
+    // 并将其返回值存储在p->trapframe->a0中
     p->trapframe->a0 = syscalls[num]();
   } else {
     printf("%d %s: unknown sys call %d\n",

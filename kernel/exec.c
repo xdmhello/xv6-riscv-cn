@@ -98,7 +98,7 @@ kexec(char *path, char **argv)
     if(argc >= MAXARG)
       goto bad;
     sp -= strlen(argv[argc]) + 1;
-    sp -= sp % 16; // riscv sp must be 16-byte aligned
+    sp -= sp % 16; // riscv栈指针必须按16字节对齐
     if(sp < stackbase)
       goto bad;
     if(copyout(pagetable, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
@@ -129,7 +129,7 @@ kexec(char *path, char **argv)
   oldpagetable = p->pagetable;
   p->pagetable = pagetable;
   p->sz = sz;
-  p->trapframe->epc = elf.entry;  // initial program counter = ulib.c:start()
+  p->trapframe->epc = elf.entry;  // 初始程序计数器 = ulib.c:start()
   p->trapframe->sp = sp; // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
 
