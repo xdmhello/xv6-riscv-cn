@@ -197,7 +197,7 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
     panic("uvmunmap: 未对齐");
 
   for(a = va; a < va + npages*PGSIZE; a += PGSIZE){
-    if((pte = walk(pagetable, a, 0)) == 0) // 叶页表条目已分配？
+    if((pte = walk(pagetable, a, 0)) == 0) // 叶页表条目是否已分配？
       continue;   
     if((*pte & PTE_V) == 0)  // 物理页已分配？
       continue;

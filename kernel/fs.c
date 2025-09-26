@@ -21,8 +21,7 @@
 #include "file.h"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
-// there should be one superblock per disk device, but we run with
-// only one device
+// 每个磁盘设备应该有一个超级块，但我们只运行一个设备
 struct superblock sb; 
 
 // 读取超级块。
@@ -195,7 +194,7 @@ ialloc(uint dev, short type)
     if(dip->type == 0){  // a free inode
       memset(dip, 0, sizeof(*dip));
       dip->type = type;
-      log_write(bp);   // mark it allocated on the disk
+      log_write(bp);   // 在磁盘上标记为已分配
       brelse(bp);
       return iget(dev, inum);
     }
@@ -373,12 +372,11 @@ ireclaim(int dev)
   }
 }
 
-// Inode content
+// Inode内容
 //
-// The content (data) associated with each inode is stored
-// in blocks on the disk. The first NDIRECT block numbers
-// are listed in ip->addrs[].  The next NINDIRECT blocks are
-// listed in block ip->addrs[NDIRECT].
+// 与每个inode关联的内容（数据）存储在磁盘上的块中。
+// 前NDIRECT个块编号列在ip->addrs[]中。
+// 接下来的NINDIRECT个块列在块ip->addrs[NDIRECT]中。
 
 // 返回inode ip中第n个块的磁盘块地址。
 // 如果没有这样的块，bmap会分配一个。
@@ -533,9 +531,8 @@ writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
   if(off > ip->size)
     ip->size = off;
 
-  // write the i-node back to disk even if the size didn't change
-  // because the loop above might have called bmap() and added a new
-  // block to ip->addrs[].
+  // 即使大小没有改变，也要将inode写回磁盘
+  // 因为上面的循环可能调用了bmap()并向ip->addrs[]添加了新块。
   iupdate(ip);
 
   return tot;

@@ -7,60 +7,60 @@
 void main();
 void timerinit();
 
-// entry.S needs one stack per CPU.
+// entry.S需要每个CPU有一个栈。
 __attribute__ ((aligned (16))) char stack0[4096 * NCPU];
 
-// entry.S jumps here in machine mode on stack0.
+// entry.S在机器模式下通过stack0跳转到这里。
 void
 start()
 {
-  // set M Previous Privilege mode to Supervisor, for mret.
+  // 将M Previous Privilege模式设置为Supervisor，用于mret。
   unsigned long x = r_mstatus();
   x &= ~MSTATUS_MPP_MASK;
   x |= MSTATUS_MPP_S;
   w_mstatus(x);
 
-  // set M Exception Program Counter to main, for mret.
-  // requires gcc -mcmodel=medany
+  // 将M Exception Program Counter设置为main，用于mret。
+  // 需要gcc -mcmodel=medany选项
   w_mepc((uint64)main);
 
-  // disable paging for now.
+  // 暂时禁用分页。
   w_satp(0);
 
-  // delegate all interrupts and exceptions to supervisor mode.
+  // 将所有中断和异常委托给supervisor模式。
   w_medeleg(0xffff);
   w_mideleg(0xffff);
   w_sie(r_sie() | SIE_SEIE | SIE_STIE);
 
-  // configure Physical Memory Protection to give supervisor mode
-  // access to all of physical memory.
+  // 配置物理内存保护，使supervisor模式
+  // 能够访问所有物理内存。
   w_pmpaddr0(0x3fffffffffffffull);
   w_pmpcfg0(0xf);
 
-  // ask for clock interrupts.
+  // 请求时钟中断。
   timerinit();
 
-  // keep each CPU's hartid in its tp register, for cpuid().
+  // 保持每个CPU的hartid在其tp寄存器中，用于cpuid()函数。
   int id = r_mhartid();
   w_tp(id);
 
-  // switch to supervisor mode and jump to main().
+  // 切换到supervisor模式并跳转到main()函数。
   asm volatile("mret");
 }
 
-// ask each hart to generate timer interrupts.
+// 请求每个hart生成定时器中断。
 void
 timerinit()
 {
-  // enable supervisor-mode timer interrupts.
+  // 启用supervisor模式定时器中断。
   w_mie(r_mie() | MIE_STIE);
   
-  // enable the sstc extension (i.e. stimecmp).
+  // 启用sstc扩展（即stimecmp功能）。
   w_menvcfg(r_menvcfg() | (1L << 63)); 
   
-  // allow supervisor to use stimecmp and time.
+  // 允许supervisor使用stimecmp和time指令。
   w_mcounteren(r_mcounteren() | 2);
   
-  // ask for the very first timer interrupt.
+  // 请求第一个定时器中断。
   w_stimecmp(r_time() + 1000000);
 }
