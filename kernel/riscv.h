@@ -76,7 +76,7 @@ w_sip(uint64 x)
   asm volatile("csrw sip, %0" : : "r" (x));
 }
 
-// Supervisor Interrupt Enable
+// 监管者中断使能
 #define SIE_SEIE (1L << 9) // external
 #define SIE_STIE (1L << 5) // timer
 static inline uint64
@@ -359,7 +359,7 @@ typedef uint64 *pagetable_t; // 512 PTEs
 #define PTE_R (1L << 1)
 #define PTE_W (1L << 2)
 #define PTE_X (1L << 3)
-#define PTE_U (1L << 4) // user can access
+#define PTE_U (1L << 4) // 用户可访问
 
 // 将物理地址移到PTE中的正确位置。
 #define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)

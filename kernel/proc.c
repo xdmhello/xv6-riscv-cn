@@ -25,9 +25,9 @@ extern char trampoline[]; // trampoline.S
 // 必须在获取任何p->lock之前获取
 struct spinlock wait_lock;
 
-// 为每个进程的内核栈分配一个页面。
+// 为每个进程的内核栈分配一个页面
 // 将其映射到内存高处，后面跟着一个无效的
-// 保护页面。
+// 保护页面
 void
 proc_mapstacks(pagetable_t kpgtbl)
 {
@@ -57,8 +57,8 @@ procinit(void)
   }
 }
 
-// 必须在禁用中断的情况下调用，
-// 以防止进程被移动到不同CPU时出现竞争条件。
+// 必须在禁用中断的情况下调用
+// 以防止进程被移动到不同CPU时出现竞争条件
 int
 cpuid()
 {
@@ -66,8 +66,8 @@ cpuid()
   return id;
 }
 
-// 返回当前CPU的cpu结构体。
-// 必须禁用中断。
+// 返回当前CPU的cpu结构体
+// 必须禁用中断
 struct cpu*
 mycpu(void)
 {
@@ -76,7 +76,7 @@ mycpu(void)
   return c;
 }
 
-// 返回当前进程的proc结构体指针，无进程时返回0。
+// 返回当前进程的proc结构体指针，无进程时返回0
 struct proc*
 myproc(void)
 {
@@ -100,10 +100,10 @@ allocpid()
   return pid;
 }
 
-// 在进程表中查找一个未使用的进程。
+// 在进程表中查找一个未使用的进程
 // 如果找到，初始化在内核中运行所需的状态，
-// 并在保持p->lock的情况下返回。
-// 如果没有空闲进程或内存分配失败，返回0。
+// 并在保持p->lock的情况下返回
+// 如果没有空闲进程或内存分配失败，返回0
 static struct proc*
 allocproc(void)
 {
@@ -123,14 +123,14 @@ found:
   p->pid = allocpid();
   p->state = USED;
 
-  // 分配一个trapframe页面。
+  // 分配一个trapframe页面
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
     release(&p->lock);
     return 0;
   }
 
-  // 空的用户页表。
+  // 空的用户页表
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
     freeproc(p);
@@ -139,7 +139,7 @@ found:
   }
 
   // 设置新的上下文以开始在forkret执行，
-// 该函数会返回到用户空间。
+// 该函数会返回到用户空间
   memset(&p->context, 0, sizeof(p->context));
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
@@ -148,8 +148,8 @@ found:
 }
 
 // 释放进程结构体及其关联的数据，
-// 包括用户页面。
-// 必须持有p->lock。
+// 包括用户页面
+// 必须持有p->lock
 static void
 freeproc(struct proc *p)
 {
@@ -170,20 +170,20 @@ freeproc(struct proc *p)
 }
 
 // 为给定进程创建用户页表，没有用户内存，
-// 但包含trampoline和trapframe页面。
+// 但包含trampoline和trapframe页面
 pagetable_t
 proc_pagetable(struct proc *p)
 {
   pagetable_t pagetable;
 
-  // 空的页表。
+  // 空的页表
   pagetable = uvmcreate();
   if(pagetable == 0)
     return 0;
 
   // 将trampoline代码（用于系统调用返回）
-// 映射到最高的用户虚拟地址。
-// 只有监管者在往返用户空间的途中使用它，因此不设置PTE_U。
+// 映射到最高的用户虚拟地址
+// 只有监管者在往返用户空间的途中使用它，因此不设置PTE_U
   if(mappages(pagetable, TRAMPOLINE, PGSIZE,
               (uint64)trampoline, PTE_R | PTE_X) < 0){
     uvmfree(pagetable, 0);
@@ -191,7 +191,7 @@ proc_pagetable(struct proc *p)
   }
 
   // 将trapframe页面映射到trampoline页面下方，供
-// trampoline.S使用。
+// trampoline.S使用
   if(mappages(pagetable, TRAPFRAME, PGSIZE,
               (uint64)(p->trapframe), PTE_R | PTE_W) < 0){
     uvmunmap(pagetable, TRAMPOLINE, 1, 0);
@@ -202,7 +202,7 @@ proc_pagetable(struct proc *p)
   return pagetable;
 }
 
-// 释放进程的页表，并释放它引用的物理内存。
+// 释放进程的页表，并释放它引用的物理内存
 void
 proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
@@ -211,7 +211,7 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
   uvmfree(pagetable, sz);
 }
 
-// 设置第一个用户进程。
+// 设置第一个用户进程
 void
 userinit(void)
 {
@@ -227,8 +227,8 @@ userinit(void)
   release(&p->lock);
 }
 
-// 将用户内存减少n字节。
-// 成功返回0，失败返回-1。
+// 将用户内存减少n字节
+// 成功返回0，失败返回-1
 int
 growproc(int n)
 {
@@ -247,8 +247,8 @@ growproc(int n)
   return 0;
 }
 
-// 创建一个新进程，复制父进程。
-// 设置子进程内核栈，使其返回到fork()系统调用后的状态。
+// 创建一个新进程，复制父进程
+// 设置子进程内核栈，使其返回到fork()系统调用后的状态
 int
 kfork(void)
 {
@@ -256,12 +256,12 @@ kfork(void)
   struct proc *np;
   struct proc *p = myproc();
 
-  // 分配进程。
+  // 分配进程
   if((np = allocproc()) == 0){
     return -1;
   }
 
-  // 将用户内存从父进程复制到子进程。
+  // 将用户内存从父进程复制到子进程
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
     release(&np->lock);
@@ -269,13 +269,13 @@ kfork(void)
   }
   np->sz = p->sz;
 
-  // 复制保存的用户寄存器。
+  // 复制保存的用户寄存器
   *(np->trapframe) = *(p->trapframe);
 
-  // 使fork在子进程中返回0。
+  // 使fork在子进程中返回0
   np->trapframe->a0 = 0;
 
-  // 增加打开的文件描述符的引用计数。
+  // 增加打开的文件描述符的引用计数
   for(i = 0; i < NOFILE; i++)
     if(p->ofile[i])
       np->ofile[i] = filedup(p->ofile[i]);
@@ -298,8 +298,8 @@ kfork(void)
   return pid;
 }
 
-// 将p的被遗弃的子进程交给init进程。
-// 调用者必须持有wait_lock。
+// 将p的被遗弃的子进程交给init进程
+// 调用者必须持有wait_lock
 void
 reparent(struct proc *p)
 {
@@ -313,9 +313,9 @@ reparent(struct proc *p)
   }
 }
 
-// 退出当前进程。不返回。
+// 退出当前进程。不返回
 // 退出的进程保持僵尸状态，
-// 直到其父进程调用wait()。
+// 直到其父进程调用wait()
 void
 kexit(int status)
 {
@@ -324,7 +324,7 @@ kexit(int status)
   if(p == initproc)
     panic("init exiting");
 
-  // 关闭所有打开的文件。
+  // 关闭所有打开的文件
   for(int fd = 0; fd < NOFILE; fd++){
     if(p->ofile[fd]){
       struct file *f = p->ofile[fd];
@@ -340,10 +340,10 @@ kexit(int status)
 
   acquire(&wait_lock);
 
-  // 将所有子进程交给init进程。
+  // 将所有子进程交给init进程
   reparent(p);
 
-  // 父进程可能正在wait()中睡眠。
+  // 父进程可能正在wait()中睡眠
   wakeup(p->parent);
   
   acquire(&p->lock);
@@ -353,13 +353,13 @@ kexit(int status)
 
   release(&wait_lock);
 
-  // 跳转到调度器，永不返回。
+  // 跳转到调度器，永不返回
   sched();
   panic("zombie exit");
 }
 
-// 等待子进程退出并返回其pid。
-// 如果此进程没有子进程，返回-1。
+// 等待子进程退出并返回其pid
+// 如果此进程没有子进程，返回-1
 int
 kwait(uint64 addr)
 {
@@ -370,11 +370,11 @@ kwait(uint64 addr)
   acquire(&wait_lock);
 
   for(;;){
-    // 扫描表查找已退出的子进程。
+    // 扫描表查找已退出的子进程
     havekids = 0;
     for(pp = proc; pp < &proc[NPROC]; pp++){
       if(pp->parent == p){
-        // 确保子进程不在exit()或swtch()中。
+        // 确保子进程不在exit()或swtch()中
         acquire(&pp->lock);
 
         havekids = 1;
@@ -396,24 +396,24 @@ kwait(uint64 addr)
       }
     }
 
-    // 如果没有子进程，等待没有意义。
+    // 如果没有子进程，等待没有意义
     if(!havekids || killed(p)){
       release(&wait_lock);
       return -1;
     }
     
-    // 等待子进程退出。
+    // 等待子进程退出
     sleep(p, &wait_lock);  //DOC: wait-sleep 在等待子进程退出时睡眠
   }
 }
 
-// 每个CPU的进程调度器。
-// 每个CPU在设置好自己后调用scheduler()。
+// 每个CPU的进程调度器
+// 每个CPU在设置好自己后调用scheduler()
 // 调度器永不返回。它循环执行以下操作：
-//  - 选择一个要运行的进程。
-//  - 切换到该进程开始运行。
+//  - 选择一个要运行的进程
+//  - 切换到该进程开始运行
 //  - 最终该进程通过swtch将控制权
-//    传回给调度器。
+//    传回给调度器
 void
 scheduler(void)
 {
@@ -424,7 +424,7 @@ scheduler(void)
   for(;;){
     // 最近运行的进程可能关闭了中断；启用它们以避免如果所有
 // 进程都在等待时出现死锁。然后将它们关闭，
-// 以避免中断和wfi之间可能的竞争条件。
+// 以避免中断和wfi之间可能的竞争条件
     intr_on();
     intr_off();
 
@@ -433,20 +433,20 @@ scheduler(void)
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
         // 切换到选定的进程。释放其锁并在跳转回我们之前
-// 重新获取它是进程的工作。
+// 重新获取它是进程的工作
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
 
-        // 进程现在暂时结束运行。
-// 在返回之前，它应该已经更改了p->state。
+        // 进程现在暂时结束运行
+// 在返回之前，它应该已经更改了p->state
         c->proc = 0;
         found = 1;
       }
       release(&p->lock);
     }
     if(found == 0) {
-      // 没有进程可运行；停止在这个核心上运行，直到发生中断。
+      // 没有进程可运行；停止在这个核心上运行，直到发生中断
       asm volatile("wfi");
     }
   }
@@ -456,7 +456,7 @@ scheduler(void)
 // 并且已更改proc->state。保存并恢复
 // intena，因为intena是此内核线程的属性，
 // 而不是此CPU的属性。它应该是proc->intena和proc->noff，
-// 但这会在少数持有锁但没有进程的地方出问题。
+// 但这会在少数持有锁但没有进程的地方出问题
 void
 sched(void)
 {
@@ -477,7 +477,7 @@ sched(void)
   mycpu()->intena = intena;
 }
 
-// 放弃CPU一轮调度。
+// 放弃CPU一轮调度
 void
 yield(void)
 {
@@ -489,7 +489,7 @@ yield(void)
 }
 
 // 由scheduler()进行的fork子进程的第一次调度
-// 将切换到forkret。
+// 将切换到forkret
 void
 forkret(void)
 {
@@ -497,67 +497,67 @@ forkret(void)
   static int first = 1;
   struct proc *p = myproc();
 
-  // 仍持有来自调度器的p->lock。
+  // 仍持有来自调度器的p->lock
   release(&p->lock);
 
   if (first) {
     // 文件系统初始化必须在常规进程的上下文中运行
 // （例如，因为它调用sleep），因此不能
-// 从main()运行。
+// 从main()运行
     fsinit(ROOTDEV);
 
     first = 0;
-    // 确保其他核心看到first=0。
+    // 确保其他核心看到first=0
     __sync_synchronize();
 
-    // 既然文件系统已初始化，我们可以调用kexec()。
-    // 将kexec的返回值（argc）放入a0。
+    // 既然文件系统已初始化，我们可以调用kexec()
+// 将kexec的返回值（argc）放入a0
     p->trapframe->a0 = kexec("/init", (char *[]){ "/init", 0 });
     if (p->trapframe->a0 == -1) {
       panic("exec");
     }
   }
 
-  // 返回到用户空间，模仿usertrap()的返回。
+  // 返回到用户空间，模仿usertrap()的返回
   prepare_return();
   uint64 satp = MAKE_SATP(p->pagetable);
   uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
   ((void (*)(uint64))trampoline_userret)(satp);
 }
 
-// 在通道chan上睡眠，释放条件锁lk。
-// 被唤醒时重新获取lk。
+// 在通道chan上睡眠，释放条件锁lk
+// 被唤醒时重新获取lk
 void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
   
   // 必须获取p->lock才能
-// 更改p->state并调用sched。
+// 更改p->state并调用sched
 // 一旦我们持有p->lock，我们可以
 // 保证不会错过任何唤醒
 // （wakeup会锁定p->lock），
-// 因此释放lk是安全的。
+// 因此释放lk是安全的
 
   acquire(&p->lock);  //DOC: sleeplock1 获取进程锁
   release(lk);
 
-  // 进入睡眠状态。
+  // 进入睡眠状态
   p->chan = chan;
   p->state = SLEEPING;
 
   sched();
 
-  // 清理。
+  // 清理
   p->chan = 0;
 
-  // 重新获取原始锁。
+  // 重新获取原始锁
   release(&p->lock);
   acquire(lk);
 }
 
-// 唤醒所有在通道chan上睡眠的进程。
-// 调用者应持有条件锁。
+// 唤醒所有在通道chan上睡眠的进程
+// 调用者应持有条件锁
 void
 wakeup(void *chan)
 {
@@ -574,9 +574,9 @@ wakeup(void *chan)
   }
 }
 
-// 杀死具有给定pid的进程。
+// 杀死具有给定pid的进程
 // 受害者在尝试返回到用户空间之前不会退出
-// （参见trap.c中的usertrap()）。
+// （参见trap.c中的usertrap()）
 int
 kkill(int pid)
 {
@@ -587,7 +587,7 @@ kkill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       if(p->state == SLEEPING){
-        // 从sleep()中唤醒进程。
+        // 从sleep()中唤醒进程
         p->state = RUNNABLE;
       }
       release(&p->lock);
@@ -617,8 +617,8 @@ killed(struct proc *p)
   return k;
 }
 
-// 根据usr_dst，复制到用户地址或内核地址。
-// 成功返回0，错误返回-1。
+// 根据usr_dst，复制到用户地址或内核地址
+// 成功返回0，错误返回-1
 int
 either_copyout(int user_dst, uint64 dst, void *src, uint64 len)
 {
@@ -631,8 +631,8 @@ either_copyout(int user_dst, uint64 dst, void *src, uint64 len)
   }
 }
 
-// 根据usr_src，从用户地址或内核地址复制。
-// 成功返回0，错误返回-1。
+// 根据usr_src，从用户地址或内核地址复制
+// 成功返回0，错误返回-1
 int
 either_copyin(void *dst, int user_src, uint64 src, uint64 len)
 {
@@ -645,9 +645,9 @@ either_copyin(void *dst, int user_src, uint64 src, uint64 len)
   }
 }
 
-// 将进程列表打印到控制台。用于调试。
-// 当用户在控制台上键入^P时运行。
-// 不使用锁以避免进一步卡住已经卡住的机器。
+// 将进程列表打印到控制台。用于调试
+// 当用户在控制台上键入^P时运行
+// 不使用锁以避免进一步卡住已经卡住的机器
 void
 procdump(void)
 {

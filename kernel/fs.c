@@ -1,4 +1,4 @@
-// File system implementation.  Five layers:
+// 文件系统实现。五层架构：
 //   + 块：原始磁盘块分配器。
 //   + 日志：用于多步更新的崩溃恢复。
 //   + 文件：inode分配器，读，写，元数据。
@@ -322,8 +322,8 @@ iput(struct inode *ip)
   if(ip->ref == 1 && ip->valid && ip->nlink == 0){
     // inode has no links and no other references: truncate and free.
 
-    // ip->ref == 1 means no other process can have ip locked,
-    // so this acquiresleep() won't block (or deadlock).
+    // ip->ref == 1意味着没有其他进程可以持有ip的锁，
+    // 所以这个acquiresleep()不会阻塞（或死锁）。
     acquiresleep(&ip->lock);
 
     release(&itable.lock);

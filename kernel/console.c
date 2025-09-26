@@ -139,18 +139,18 @@ consoleintr(int c)
   acquire(&cons.lock);
 
   switch(c){
-  case C('P'):  // Print process list.
+  case C('P'):  // 打印进程列表。
     procdump();
     break;
-  case C('U'):  // Kill line.
+  case C('U'):  // 清除整行。
     while(cons.e != cons.w &&
           cons.buf[(cons.e-1) % INPUT_BUF_SIZE] != '\n'){
       cons.e--;
       consputc(BACKSPACE);
     }
     break;
-  case C('H'): // Backspace
-  case '\x7f': // Delete key
+  case C('H'): // 退格
+  case '\x7f': // 删除键
     if(cons.e != cons.w){
       cons.e--;
       consputc(BACKSPACE);
@@ -160,15 +160,14 @@ consoleintr(int c)
     if(c != 0 && cons.e-cons.r < INPUT_BUF_SIZE){
       c = (c == '\r') ? '\n' : c;
 
-      // echo back to the user.
+      // 回显给用户。
       consputc(c);
 
-      // store for consumption by consoleread().
+      // 存储以供consoleread()使用。
       cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
 
       if(c == '\n' || c == C('D') || cons.e-cons.r == INPUT_BUF_SIZE){
-        // wake up consoleread() if a whole line (or end-of-file)
-        // has arrived.
+        // 如果整行（或文件结束符）已到达，则唤醒consoleread()
         cons.w = cons.e;
         wakeup(&cons.r);
       }

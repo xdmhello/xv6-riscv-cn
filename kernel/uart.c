@@ -39,7 +39,7 @@
 // 用于传输。
 static struct spinlock tx_lock;
 static int tx_busy;           // UART是否正忙着发送？
-static int tx_chan;           // &tx_chan is the "wait channel"
+static int tx_chan;           // &tx_chan是等待通道
 
 extern volatile int panicking; // 来自printf.c
 extern volatile int panicked; // 来自printf.c

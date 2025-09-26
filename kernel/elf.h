@@ -1,10 +1,10 @@
-// Format of an ELF executable file
+// ELF可执行文件格式
 
 #define ELF_MAGIC 0x464C457FU  // "\x7FELF" in little endian
 
 // 文件头
 struct elfhdr {
-  uint magic;  // must equal ELF_MAGIC
+  uint magic;  // 必须等于ELF_MAGIC
   uchar elf[12];
   ushort type;
   ushort machine;
