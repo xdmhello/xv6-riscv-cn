@@ -6,7 +6,9 @@
 #include "proc.h"
 #include "defs.h"
 
+// 保护ticks计数器的自旋锁
 struct spinlock tickslock;
+// 系统启动后的时钟滴答数
 uint ticks;
 
 extern char trampoline[], uservec[];
@@ -16,17 +18,18 @@ void kernelvec();
 
 extern int devintr();
 
+// 初始化陷阱处理
 void
 trapinit(void)
 {
-  initlock(&tickslock, "time");
+  initlock(&tickslock, "time");  // 初始化时间锁
 }
 
 // 设置内核模式下接收异常和陷阱
 void
 trapinithart(void)
 {
-  w_stvec((uint64)kernelvec);
+  w_stvec((uint64)kernelvec);  // 设置内核向量入口点
 }
 
 //

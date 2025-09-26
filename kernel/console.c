@@ -1,12 +1,12 @@
 //
-// Console input and output, to the uart.
-// Reads are line at a time.
-// Implements special input characters:
-//   newline -- end of line
-//   control-h -- backspace
-//   control-u -- kill line
-//   control-d -- end of file
-//   control-p -- print process list
+// 控制台输入和输出，通过UART接口。
+// 一次读取一行。
+// 实现特殊输入字符：
+//   换行符 -- 行结束
+//   control-h -- 退格
+//   control-u -- 清除整行
+//   control-d -- 文件结束
+//   control-p -- 打印进程列表
 //
 
 #include <stdarg.h>
@@ -26,9 +26,9 @@
 #define C(x)  ((x)-'@')  // Control-x
 
 //
-// send one character to the uart.
-// called by printf(), and to echo input characters,
-// but not from write().
+// 向UART发送一个字符。
+// 被printf()调用，用于回显输入字符，
+// 但不是从write()调用。
 //
 void
 consputc(int c)
@@ -53,7 +53,7 @@ struct {
 } cons;
 
 //
-// user write()s to the console go here.
+// 用户对控制台的write()调用进入这里。
 //
 int
 consolewrite(int user_src, uint64 src, int n)
@@ -75,10 +75,9 @@ consolewrite(int user_src, uint64 src, int n)
 }
 
 //
-// user read()s from the console go here.
-// copy (up to) a whole input line to dst.
-// user_dist indicates whether dst is a user
-// or kernel address.
+// 用户从控制台的read()调用进入这里。
+// 将（最多）一整行输入复制到dst。
+// user_dst表示dst是用户地址还是内核地址。
 //
 int
 consoleread(int user_dst, uint64 dst, int n)
@@ -131,10 +130,10 @@ consoleread(int user_dst, uint64 dst, int n)
 }
 
 //
-// the console input interrupt handler.
-// uartintr() calls this for input character.
-// do erase/kill processing, append to cons.buf,
-// wake up consoleread() if a whole line has arrived.
+// 控制台输入中断处理程序。
+// uartintr()为输入字符调用此函数。
+// 执行删除/清除处理，追加到cons.buf，
+// 如果一整行到达，唤醒consoleread()。
 //
 void
 consoleintr(int c)

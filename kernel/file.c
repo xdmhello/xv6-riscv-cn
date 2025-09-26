@@ -1,5 +1,5 @@
 //
-// Support functions for system calls that involve file descriptors.
+// 支持涉及文件描述符的系统调用的函数。
 //
 
 #include "types.h"
@@ -25,7 +25,7 @@ fileinit(void)
   initlock(&ftable.lock, "ftable");
 }
 
-// Allocate a file structure.
+// 分配文件结构体。
 struct file*
 filealloc(void)
 {
@@ -43,7 +43,7 @@ filealloc(void)
   return 0;
 }
 
-// Increment ref count for file f.
+// 增加文件f的引用计数。
 struct file*
 filedup(struct file *f)
 {
@@ -55,7 +55,7 @@ filedup(struct file *f)
   return f;
 }
 
-// Close file f.  (Decrement ref count, close when reaches 0.)
+// 关闭文件f。（减少引用计数，当计数为0时关闭）
 void
 fileclose(struct file *f)
 {
@@ -82,8 +82,8 @@ fileclose(struct file *f)
   }
 }
 
-// Get metadata about file f.
-// addr is a user virtual address, pointing to a struct stat.
+// 获取文件f的元数据。
+// addr是一个用户虚拟地址，指向struct stat结构体。
 int
 filestat(struct file *f, uint64 addr)
 {
@@ -101,8 +101,8 @@ filestat(struct file *f, uint64 addr)
   return -1;
 }
 
-// Read from file f.
-// addr is a user virtual address.
+// 从文件f读取数据。
+// addr是一个用户虚拟地址。
 int
 fileread(struct file *f, uint64 addr, int n)
 {
@@ -129,8 +129,8 @@ fileread(struct file *f, uint64 addr, int n)
   return r;
 }
 
-// Write to file f.
-// addr is a user virtual address.
+// 向文件f写入数据。
+// addr是一个用户虚拟地址。
 int
 filewrite(struct file *f, uint64 addr, int n)
 {
@@ -146,10 +146,10 @@ filewrite(struct file *f, uint64 addr, int n)
       return -1;
     ret = devsw[f->major].write(1, addr, n);
   } else if(f->type == FD_INODE){
-    // write a few blocks at a time to avoid exceeding
-    // the maximum log transaction size, including
-    // i-node, indirect block, allocation blocks,
-    // and 2 blocks of slop for non-aligned writes.
+    // 每次写入几个块，以避免超过
+    // 最大日志事务大小，包括
+    // i-node、间接块、分配块，
+    // 以及2个用于非对齐写入的额外块。
     int max = ((MAXOPBLOCKS-1-1-2) / 2) * BSIZE;
     int i = 0;
     while(i < n){
