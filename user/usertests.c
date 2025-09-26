@@ -9,12 +9,11 @@
 #include "kernel/riscv.h"
 
 //
-// Tests xv6 system calls.  usertests without arguments runs them all
-// and usertests <name> runs <name> test. The test runner creates for
-// each test a process and based on the exit status of the process,
-// the test runner reports "OK" or "FAILED".  Some tests result in
-// kernel printing usertrap messages, which can be ignored if test
-// prints "OK".
+// 测试xv6系统调用。不带参数运行usertests将执行所有测试，
+// 而usertests <名称>则只运行指定名称的测试。测试运行器会为
+// 每个测试创建一个进程，并根据进程的退出状态
+// 报告"OK"或"FAILED"。有些测试会导致内核打印usertrap消息，
+// 如果测试最终打印"OK"，这些消息可以忽略。
 //
 
 #define BUFSZ  ((MAXOPBLOCKS+2)*BSIZE)
@@ -22,13 +21,11 @@
 char buf[BUFSZ];
 
 //
-// Section with tests that run fairly quickly.  Use -q if you want to
-// run just those.  Without -q usertests also runs the ones that take a
-// fair amount of time.
+// 本节包含运行速度较快的测试。如果只想运行这些测试，可使用-q选项。
+// 不使用-q选项时，usertests还会运行那些需要较多时间的测试。
 //
 
-// what if you pass ridiculous pointers to system calls
-// that read user memory with copyin?
+// 向使用copyin读取用户内存的系统调用传递无效指针会发生什么？
 void
 copyin(char *s)
 {
@@ -85,29 +82,29 @@ copyout(char *s)
 
     int fd = open("README", 0);
     if(fd < 0){
-      printf("open(README) failed\n");
+      printf("open(README) 失败\n");
       exit(1);
     }
     int n = read(fd, (void*)addr, 8192);
     if(n > 0){
-      printf("read(fd, %p, 8192) returned %d, not -1 or 0\n", (void*)addr, n);
+      printf("read(fd, %p, 8192) 返回 %d，而不是 -1 或 0\n", (void*)addr, n);
       exit(1);
     }
     close(fd);
 
     int fds[2];
     if(pipe(fds) < 0){
-      printf("pipe() failed\n");
+      printf("pipe() 失败\n");
       exit(1);
     }
     n = write(fds[1], "x", 1);
     if(n != 1){
-      printf("pipe write failed\n");
+      printf("管道写入失败\n");
       exit(1);
     }
     n = read(fds[0], (void*)addr, 8192);
     if(n > 0){
-      printf("read(pipe, %p, 8192) returned %d, not -1 or 0\n", (void*)addr, n);
+      printf("read(pipe, %p, 8192) 返回 %d，而不是 -1 或 0\n", (void*)addr, n);
       exit(1);
     }
     close(fds[0]);
@@ -115,7 +112,7 @@ copyout(char *s)
   }
 }
 
-// what if you pass ridiculous string pointers to system calls?
+// 向系统调用传递无效的字符串指针会发生什么？
 void
 copyinstr1(char *s)
 {
@@ -133,9 +130,8 @@ copyinstr1(char *s)
   }
 }
 
-// what if a string system call argument is exactly the size
-// of the kernel buffer it is copied into, so that the null
-// would fall just beyond the end of the kernel buffer?
+// 如果字符串系统调用参数的大小恰好等于它被复制到的内核缓冲区的大小，
+// 导致空字符恰好落在内核缓冲区末尾之外，会发生什么？
 void
 copyinstr2(char *s)
 {
@@ -147,32 +143,32 @@ copyinstr2(char *s)
   
   int ret = unlink(b);
   if(ret != -1){
-    printf("unlink(%s) returned %d, not -1\n", b, ret);
+    printf("unlink(%s) 返回 %d，而不是 -1\n", b, ret);
     exit(1);
   }
 
   int fd = open(b, O_CREATE | O_WRONLY);
   if(fd != -1){
-    printf("open(%s) returned %d, not -1\n", b, fd);
+    printf("open(%s) 返回 %d，而不是 -1\n", b, fd);
     exit(1);
   }
 
   ret = link(b, b);
   if(ret != -1){
-    printf("link(%s, %s) returned %d, not -1\n", b, b, ret);
+    printf("link(%s, %s) 返回 %d，而不是 -1\n", b, b, ret);
     exit(1);
   }
 
   char *args[] = { "xx", 0 };
   ret = exec(b, args);
   if(ret != -1){
-    printf("exec(%s) returned %d, not -1\n", b, fd);
+    printf("exec(%s) 返回 %d，而不是 -1\n", b, fd);
     exit(1);
   }
 
   int pid = fork();
   if(pid < 0){
-    printf("fork failed\n");
+    printf("fork 失败\n");
     exit(1);
   }
   if(pid == 0){
@@ -183,21 +179,21 @@ copyinstr2(char *s)
     char *args2[] = { big, big, big, 0 };
     ret = exec("echo", args2);
     if(ret != -1){
-      printf("exec(echo, BIG) returned %d, not -1\n", fd);
+      printf("exec(echo, BIG) 返回 %d，而不是 -1\n", fd);
       exit(1);
     }
-    exit(747); // OK
+    exit(747); // 正常
   }
 
   int st = 0;
   wait(&st);
   if(st != 747){
-    printf("exec(echo, BIG) succeeded, should have failed\n");
+    printf("exec(echo, BIG) 成功了，但应该失败\n");
     exit(1);
   }
 }
 
-// what if a string argument crosses over the end of last user page?
+// 如果字符串参数跨越最后一个用户页的末尾，会发生什么？
 void
 copyinstr3(char *s)
 {
