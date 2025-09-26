@@ -6,7 +6,7 @@
 
 volatile static int started = 0;
 
-// start() jumps here in supervisor mode on all CPUs.
+// start()函数在所有CPU的监管模式下跳转到这里。
 void
 main()
 {
@@ -14,31 +14,31 @@ main()
     consoleinit();
     printfinit();
     printf("\n");
-    printf("xv6 kernel is booting\n");
+    printf("xv6 内核正在启动\n");
     printf("\n");
-    kinit();         // physical page allocator
-    kvminit();       // create kernel page table
-    kvminithart();   // turn on paging
-    procinit();      // process table
-    trapinit();      // trap vectors
-    trapinithart();  // install kernel trap vector
-    plicinit();      // set up interrupt controller
-    plicinithart();  // ask PLIC for device interrupts
-    binit();         // buffer cache
-    iinit();         // inode table
-    fileinit();      // file table
-    virtio_disk_init(); // emulated hard disk
-    userinit();      // first user process
+    kinit();         // 物理页分配器
+    kvminit();       // 创建内核页表
+    kvminithart();   // 开启分页
+    procinit();      // 进程表
+    trapinit();      // 陷阱向量
+    trapinithart();  // 安装内核陷阱向量
+    plicinit();      // 设置中断控制器
+    plicinithart();  // 向PLIC请求设备中断
+    binit();         // 缓冲区缓存
+    iinit();         // inode表
+    fileinit();      // 文件表
+    virtio_disk_init(); // 模拟硬盘
+    userinit();      // 第一个用户进程
     __sync_synchronize();
     started = 1;
   } else {
     while(started == 0)
       ;
     __sync_synchronize();
-    printf("hart %d starting\n", cpuid());
-    kvminithart();    // turn on paging
-    trapinithart();   // install kernel trap vector
-    plicinithart();   // ask PLIC for device interrupts
+    printf("处理器 %d 正在启动\n", cpuid());
+    kvminithart();    // 开启分页
+    trapinithart();   // 安装内核陷阱向量
+    plicinithart();   // 向PLIC请求设备中断
   }
 
   scheduler();        
