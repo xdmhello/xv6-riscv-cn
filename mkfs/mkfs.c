@@ -5,20 +5,21 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#define stat xv6_stat  // avoid clash with host struct stat
+#define stat xv6_stat  // 避免与主机的struct stat冲突
 #include "kernel/types.h"
 #include "kernel/fs.h"
 #include "kernel/stat.h"
 #include "kernel/param.h"
 
 #ifndef static_assert
+// 静态断言宏定义
 #define static_assert(a, b) do { switch (0) case 0: case (a): ; } while (0)
 #endif
 
 #define NINODES 200
 
-// Disk layout:
-// [ boot block | sb block | log | inode blocks | free bit map | data blocks ]
+// 磁盘布局：
+// [ 引导块 | 超级块 | 日志 | inode块 | 空闲位图 | 数据块 ]
 
 int nbitmap = FSSIZE/BPB + 1;
 int ninodeblocks = NINODES / IPB + 1;
@@ -42,7 +43,7 @@ uint ialloc(ushort type);
 void iappend(uint inum, void *p, int n);
 void die(const char *);
 
-// convert to riscv byte order
+// 转换为riscv字节序
 ushort
 xshort(ushort x)
 {
@@ -75,10 +76,10 @@ main(int argc, char *argv[])
   struct dinode din;
 
 
-  static_assert(sizeof(int) == 4, "Integers must be 4 bytes!");
+  static_assert(sizeof(int) == 4, "整数必须是4字节！");
 
   if(argc < 2){
-    fprintf(stderr, "Usage: mkfs fs.img files...\n");
+    fprintf(stderr, "用法: mkfs fs.img 文件...\n");
     exit(1);
   }
 
@@ -89,7 +90,7 @@ main(int argc, char *argv[])
   if(fsfd < 0)
     die(argv[1]);
 
-  // 1 fs block = 1 disk sector
+  // 1个文件系统块 = 1个磁盘扇区
   nmeta = 2 + nlog + ninodeblocks + nbitmap;
   nblocks = FSSIZE - nmeta;
 
@@ -102,10 +103,10 @@ main(int argc, char *argv[])
   sb.inodestart = xint(2+nlog);
   sb.bmapstart = xint(2+nlog+ninodeblocks);
 
-  printf("nmeta %d (boot, super, log blocks %u, inode blocks %u, bitmap blocks %u) blocks %d total %d\n",
+  printf("元数据块数量 %d（引导块、超级块、日志块 %u、inode块 %u、位图块 %u） 数据块 %d 总计 %d\n",
          nmeta, nlog, ninodeblocks, nbitmap, nblocks, FSSIZE);
 
-  freeblock = nmeta;     // the first free block that we can allocate
+  freeblock = nmeta;     // 第一个可分配的空闲块
 
   for(i = 0; i < FSSIZE; i++)
     wsect(i, zeroes);
@@ -140,10 +141,10 @@ main(int argc, char *argv[])
     if((fd = open(argv[i], 0)) < 0)
       die(argv[i]);
 
-    // Skip leading _ in name when writing to file system.
-    // The binaries are named _rm, _cat, etc. to keep the
-    // build operating system from trying to execute them
-    // in place of system binaries like rm and cat.
+    // 写入文件系统时跳过名称前的下划线。
+    // 二进制文件命名为_rm、_cat等，是为了防止
+    // 构建操作系统时尝试执行它们
+    // 而不是系统自带的rm和cat等二进制文件。
     if(shortname[0] == '_')
       shortname += 1;
 
@@ -162,7 +163,7 @@ main(int argc, char *argv[])
     close(fd);
   }
 
-  // fix size of root inode dir
+  // 修正根inode目录的大小
   rinode(rootino, &din);
   off = xint(din.size);
   off = ((off/BSIZE) + 1) * BSIZE;
@@ -174,6 +175,7 @@ main(int argc, char *argv[])
   exit(0);
 }
 
+// 写入一个扇区
 void
 wsect(uint sec, void *buf)
 {
@@ -183,6 +185,7 @@ wsect(uint sec, void *buf)
     die("write");
 }
 
+// 写入一个inode
 void
 winode(uint inum, struct dinode *ip)
 {
@@ -197,6 +200,7 @@ winode(uint inum, struct dinode *ip)
   wsect(bn, buf);
 }
 
+// 读取一个inode
 void
 rinode(uint inum, struct dinode *ip)
 {
@@ -210,6 +214,7 @@ rinode(uint inum, struct dinode *ip)
   *ip = *dip;
 }
 
+// 读取一个扇区
 void
 rsect(uint sec, void *buf)
 {
@@ -219,6 +224,7 @@ rsect(uint sec, void *buf)
     die("read");
 }
 
+// 分配一个inode
 uint
 ialloc(ushort type)
 {
@@ -233,24 +239,27 @@ ialloc(ushort type)
   return inum;
 }
 
+// 分配位图块
 void
 balloc(int used)
 {
   uchar buf[BSIZE];
   int i;
 
-  printf("balloc: first %d blocks have been allocated\n", used);
-  assert(used < BPB);
+  printf("balloc: 前%d个块已被分配\n", used);
+  assert(used < BPB);  // 确保使用的块数小于每块位数
   bzero(buf, BSIZE);
   for(i = 0; i < used; i++){
     buf[i/8] = buf[i/8] | (0x1 << (i%8));
   }
-  printf("balloc: write bitmap block at sector %d\n", sb.bmapstart);
+  printf("balloc: 在位图表扇区%d写入位图块\n", sb.bmapstart);
   wsect(sb.bmapstart, buf);
 }
 
+// 取两个数中的较小值
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+// 向inode追加数据
 void
 iappend(uint inum, void *xp, int n)
 {
@@ -263,7 +272,7 @@ iappend(uint inum, void *xp, int n)
 
   rinode(inum, &din);
   off = xint(din.size);
-  // printf("append inum %d at off %d sz %d\n", inum, off, n);
+  // printf("向inode %d在偏移量%d处追加%d字节\n", inum, off, n);
   while(n > 0){
     fbn = off / BSIZE;
     assert(fbn < MAXFILE);
@@ -295,6 +304,7 @@ iappend(uint inum, void *xp, int n)
   winode(inum, &din);
 }
 
+// 显示错误信息并退出
 void
 die(const char *s)
 {
