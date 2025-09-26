@@ -17,28 +17,28 @@
 // UART控制寄存器。
 // 有些寄存器的读写含义不同。
 // 详见 http://byterunner.com/16550.html
-#define RHR 0                 // receive holding register (for input bytes)
-#define THR 0                 // transmit holding register (for output bytes)
-#define IER 1                 // interrupt enable register
+#define RHR 0                 // 接收保持寄存器（用于输入字节）
+#define THR 0                 // 发送保持寄存器（用于输出字节）
+#define IER 1                 // 中断使能寄存器
 #define IER_RX_ENABLE (1<<0)
 #define IER_TX_ENABLE (1<<1)
-#define FCR 2                 // FIFO control register
+#define FCR 2                 // FIFO控制寄存器
 #define FCR_FIFO_ENABLE (1<<0)
-#define FCR_FIFO_CLEAR (3<<1) // clear the content of the two FIFOs
-#define ISR 2                 // interrupt status register
-#define LCR 3                 // line control register
+#define FCR_FIFO_CLEAR (3<<1) // 清除两个FIFO的内容
+#define ISR 2                 // 中断状态寄存器
+#define LCR 3                 // 线路控制寄存器
 #define LCR_EIGHT_BITS (3<<0)
-#define LCR_BAUD_LATCH (1<<7) // special mode to set baud rate
-#define LSR 5                 // line status register
-#define LSR_RX_READY (1<<0)   // input is waiting to be read from RHR
-#define LSR_TX_IDLE (1<<5)    // THR can accept another character to send
+#define LCR_BAUD_LATCH (1<<7) // 设置波特率的特殊模式
+#define LSR 5                 // 线路状态寄存器
+#define LSR_RX_READY (1<<0)   // 输入等待从RHR读取
+#define LSR_TX_IDLE (1<<5)    // THR可以接受另一个要发送的字符
 
 #define ReadReg(reg) (*(Reg(reg)))
 #define WriteReg(reg, v) (*(Reg(reg)) = (v))
 
 // 用于传输。
 static struct spinlock tx_lock;
-static int tx_busy;           // is the UART busy sending?
+static int tx_busy;           // UART是否正忙着发送？
 static int tx_chan;           // &tx_chan is the "wait channel"
 
 extern volatile int panicking; // 来自printf.c

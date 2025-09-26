@@ -1,4 +1,4 @@
-// Mutual exclusion spin locks.
+// 互斥自旋锁
 
 #include "types.h"
 #include "param.h"
@@ -21,28 +21,27 @@ initlock(struct spinlock *lk, char *name)
 void
 acquire(struct spinlock *lk)
 {
-  push_off(); // disable interrupts to avoid deadlock.
+  push_off(); // 禁用中断以避免死锁。
   if(holding(lk))
     panic("acquire");
 
-  // On RISC-V, sync_lock_test_and_set turns into an atomic swap:
+  // 在RISC-V上，sync_lock_test_and_set会转换为原子交换：
   //   a5 = 1
   //   s1 = &lk->locked
   //   amoswap.w.aq a5, a5, (s1)
   while(__sync_lock_test_and_set(&lk->locked, 1) != 0)
     ;
 
-  // Tell the C compiler and the processor to not move loads or stores
-  // past this point, to ensure that the critical section's memory
-  // references happen strictly after the lock is acquired.
-  // On RISC-V, this emits a fence instruction.
+  // 告诉C编译器和处理器不要在这个点之后移动加载或存储操作，
+  // 以确保临界区的内存引用严格在获取锁之后发生。
+  // 在RISC-V上，这会发出一个fence指令。
   __sync_synchronize();
 
-  // Record info about lock acquisition for holding() and debugging.
+  // 记录锁获取的信息，用于holding()和调试。
   lk->cpu = mycpu();
 }
 
-// Release the lock.
+// 释放锁。
 void
 release(struct spinlock *lk)
 {
@@ -51,19 +50,15 @@ release(struct spinlock *lk)
 
   lk->cpu = 0;
 
-  // Tell the C compiler and the CPU to not move loads or stores
-  // past this point, to ensure that all the stores in the critical
-  // section are visible to other CPUs before the lock is released,
-  // and that loads in the critical section occur strictly before
-  // the lock is released.
-  // On RISC-V, this emits a fence instruction.
+  // 告诉C编译器和CPU不要在这个点之后移动加载或存储操作，
+  // 以确保在释放锁之前，临界区中的所有存储对其他CPU可见，
+  // 并且临界区中的加载严格在释放锁之前发生。
+  // 在RISC-V上，这会发出一个fence指令。
   __sync_synchronize();
 
-  // Release the lock, equivalent to lk->locked = 0.
-  // This code doesn't use a C assignment, since the C standard
-  // implies that an assignment might be implemented with
-  // multiple store instructions.
-  // On RISC-V, sync_lock_release turns into an atomic swap:
+  // 释放锁，等同于lk->locked = 0。
+  // 这段代码不使用C赋值，因为C标准暗示赋值可能用多个存储指令实现。
+  // 在RISC-V上，sync_lock_release会转换为原子交换：
   //   s1 = &lk->locked
   //   amoswap.w zero, zero, (s1)
   __sync_lock_release(&lk->locked);
@@ -71,8 +66,8 @@ release(struct spinlock *lk)
   pop_off();
 }
 
-// Check whether this cpu is holding the lock.
-// Interrupts must be off.
+// 检查此CPU是否持有该锁。
+// 中断必须关闭。
 int
 holding(struct spinlock *lk)
 {
@@ -81,17 +76,16 @@ holding(struct spinlock *lk)
   return r;
 }
 
-// push_off/pop_off are like intr_off()/intr_on() except that they are matched:
-// it takes two pop_off()s to undo two push_off()s.  Also, if interrupts
-// are initially off, then push_off, pop_off leaves them off.
+// push_off/pop_off类似于intr_off()/intr_on()，但它们是匹配的：
+// 需要两次pop_off()来撤销两次push_off()。此外，如果中断最初是关闭的，
+// 那么push_off和pop_off操作后它们仍然是关闭的。
 
 void
 push_off(void)
 {
   int old = intr_get();
 
-  // disable interrupts to prevent an involuntary context
-  // switch while using mycpu().
+  // 禁用中断以防止在使用mycpu()时发生非自愿的上下文切换。
   intr_off();
 
   if(mycpu()->noff == 0)

@@ -20,22 +20,17 @@
 #define R(r) ((volatile uint32 *)(VIRTIO0 + (r)))
 
 static struct disk {
-  // a set (not a ring) of DMA descriptors, with which the
-  // driver tells the device where to read and write individual
-  // disk operations. there are NUM descriptors.
-  // most commands consist of a "chain" (a linked list) of a couple of
-  // these descriptors.
+  // 一组（不是环形）DMA描述符，驱动程序通过它们告诉设备
+  // 读取和写入各个磁盘操作的位置。共有NUM个描述符。
+  // 大多数命令由几个这样的描述符组成的"链"（链表）构成。
   struct virtq_desc *desc;
 
-  // a ring in which the driver writes descriptor numbers
-  // that the driver would like the device to process.  it only
-  // includes the head descriptor of each chain. the ring has
-  // NUM elements.
+  // 一个环形缓冲区，驱动程序在其中写入它希望设备处理的描述符编号。
+  // 它只包含每个链的头描述符。这个环有NUM个元素。
   struct virtq_avail *avail;
 
-  // a ring in which the device writes descriptor numbers that
-  // the device has finished processing (just the head of each chain).
-  // there are NUM used ring entries.
+  // 一个环形缓冲区，设备在其中写入它已完成处理的描述符编号（仅每个链的头部）。
+  // 有NUM个已使用的环条目。
   struct virtq_used *used;
 
   // 我们自己的记录。

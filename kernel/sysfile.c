@@ -1,7 +1,7 @@
 //
-// File-system system calls.
-// Mostly argument checking, since we don't trust
-// user code, and calls into file.c and fs.c.
+// 文件系统系统调用。
+// 主要是参数检查，因为我们不信任
+// 用户代码，并调用file.c和fs.c中的函数。
 //
 
 #include "types.h"
@@ -16,8 +16,8 @@
 #include "file.h"
 #include "fcntl.h"
 
-// Fetch the nth word-sized system call argument as a file descriptor
-// and return both the descriptor and the corresponding struct file.
+// 获取第n个字大小的系统调用参数作为文件描述符
+// 并返回描述符和对应的file结构体。
 static int
 argfd(int n, int *pfd, struct file **pf)
 {
@@ -34,8 +34,8 @@ argfd(int n, int *pfd, struct file **pf)
   return 0;
 }
 
-// Allocate a file descriptor for the given file.
-// Takes over file reference from caller on success.
+// 为给定文件分配一个文件描述符。
+// 成功时接管调用者的文件引用。
 static int
 fdalloc(struct file *f)
 {
@@ -119,7 +119,7 @@ sys_fstat(void)
   return filestat(f, st);
 }
 
-// Create the path new as a link to the same inode as old.
+// 创建路径new作为指向与old相同inode的链接。
 uint64
 sys_link(void)
 {
@@ -169,7 +169,7 @@ bad:
   return -1;
 }
 
-// Is the directory dp empty except for "." and ".." ?
+// 目录dp除了"."和".."外是否为空？
 static int
 isdirempty(struct inode *dp)
 {

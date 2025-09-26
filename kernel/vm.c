@@ -17,7 +17,7 @@ extern char etext[];  // kernel.ld将其设置为内核代码的结尾。
 
 extern char trampoline[]; // trampoline.S
 
-// 为内核创建直接映射的页表。
+// 为内核创建直接映射的页表
 pagetable_t
 kvmmake(void)
 {
@@ -32,28 +32,28 @@ kvmmake(void)
   // virtio mmio磁盘接口
   kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
 
-  // PLIC
+  // PLIC中断控制器
   kvmmap(kpgtbl, PLIC, PLIC, 0x4000000, PTE_R | PTE_W);
 
-  // 映射内核文本为可执行和只读。
+  // 映射内核文本为可执行和只读
   kvmmap(kpgtbl, KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X);
 
-  // 映射内核数据和我们将使用的物理RAM。
+  // 映射内核数据和我们将使用的物理RAM
   kvmmap(kpgtbl, (uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W);
 
   // 映射trampoline用于陷阱进入/退出到
-  // 内核中最高的虚拟地址。
+  // 内核中最高的虚拟地址
   kvmmap(kpgtbl, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
 
-  // 为每个进程分配并映射内核栈。
+  // 为每个进程分配并映射内核栈
   proc_mapstacks(kpgtbl);
   
   return kpgtbl;
 }
 
-// 向内核页表添加映射。
-// 仅在引导时使用。
-// 不刷新TLB或启用分页。
+// 向内核页表添加映射
+// 仅在引导时使用
+// 不刷新TLB或启用分页
 void
 kvmmap(pagetable_t kpgtbl, uint64 va, uint64 pa, uint64 sz, int perm)
 {
@@ -61,7 +61,7 @@ kvmmap(pagetable_t kpgtbl, uint64 va, uint64 pa, uint64 sz, int perm)
     panic("kvmmap");
 }
 
-// 初始化所有CPU共享的kernel_pagetable。
+// 初始化所有CPU共享的kernel_pagetable
 void
 kvminit(void)
 {
@@ -69,29 +69,29 @@ kvminit(void)
 }
 
 // 切换当前CPU的硬件页表寄存器到
-// 内核的页表，并启用分页。
+// 内核的页表，并启用分页
 void
 kvminithart()
 {
-  // 等待之前对页表内存的所有写入完成。
+  // 等待之前对页表内存的所有写入完成
   sfence_vma();
 
   w_satp(MAKE_SATP(kernel_pagetable));
 
-  // 刷新TLB中的过期条目。
+  // 刷新TLB中的过期条目
   sfence_vma();
 }
 
 // 返回页表pagetable中对应虚拟地址va的PTE地址。如果alloc!=0，
-// 创建任何必需的页表页。
+// 创建任何必需的页表页
 //
-// risc-v Sv39方案有三级页表页。一个页表页包含512个64位PTE。
+// risc-v Sv39方案有三级页表页。一个页表页包含512个64位PTE
 // 一个64位虚拟地址被分为五个字段：
-//   39..63 -- 必须为零。
-//   30..38 -- 9位的level-2索引。
-//   21..29 -- 9位的level-1索引。
-//   12..20 -- 9位的level-0索引。
-//    0..11 -- 页内字节偏移的12位。
+//   39..63 -- 必须为零
+//   30..38 -- 9位的level-2索引
+//   21..29 -- 9位的level-1索引
+//   12..20 -- 9位的level-0索引
+//    0..11 -- 页内字节偏移的12位
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
@@ -113,8 +113,8 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
 }
 
 // 查找虚拟地址，返回物理地址，
-// 或0（如果未映射）。
-// 只能用于查找用户页。
+// 或0（如果未映射）
+// 只能用于查找用户页
 uint64
 walkaddr(pagetable_t pagetable, uint64 va)
 {
@@ -136,10 +136,10 @@ walkaddr(pagetable_t pagetable, uint64 va)
 }
 
 // 为从va开始的虚拟地址创建PTE，这些地址指向
-// 从pa开始的物理地址。
-// va和size必须按页对齐。
+// 从pa开始的物理地址
+// va和size必须按页对齐
 // 成功返回0，-1表示walk()无法
-// 分配所需的页表页。
+// 分配所需的页表页
 int
 mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 {
@@ -171,8 +171,8 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
   return 0;
 }
 
-// 创建一个空的用户页表。
-// 内存不足时返回0。
+// 创建一个空的用户页表
+// 内存不足时返回0
 pagetable_t
 uvmcreate()
 {
@@ -184,9 +184,9 @@ uvmcreate()
   return pagetable;
 }
 
-// 删除从va开始的npages个映射。va必须按页对齐。
-// 映射不存在也没关系。
-// 可选地释放物理内存。
+// 删除从va开始的npages个映射。va必须按页对齐
+// 映射不存在也没关系
+// 可选地释放物理内存
 void
 uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
 {
@@ -210,7 +210,7 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
 }
 
 // 分配PTE和物理内存，将进程从oldsz增长到
-// newsz，后者不需要按页对齐。成功返回新大小，失败返回0。
+// newsz，后者不需要按页对齐。成功返回新大小，失败返回0
 uint64
 uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz, int xperm)
 {
@@ -239,8 +239,8 @@ uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz, int xperm)
 
 // 释放用户页，将进程大小从oldsz减少到
 // newsz。oldsz和newsz不需要按页对齐，newsz也不需要
-// 小于oldsz。oldsz可以大于实际进程大小。
-// 返回新的进程大小。
+// 小于oldsz。oldsz可以大于实际进程大小
+// 返回新的进程大小
 uint64
 uvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
 {
@@ -255,16 +255,16 @@ uvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
   return newsz;
 }
 
-// 递归释放页表页。
-// 所有叶映射必须已经被移除。
+// 递归释放页表页
+// 所有叶映射必须已经被移除
 void
 freewalk(pagetable_t pagetable)
 {
-  // 一个页表中有2^9 = 512个PTE。
+  // 一个页表中有2^9 = 512个PTE
   for(int i = 0; i < 512; i++){
     pte_t pte = pagetable[i];
     if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
-      // 这个PTE指向一个更低级别的页表。
+      // 这个PTE指向一个更低级别的页表
       uint64 child = PTE2PA(pte);
       freewalk((pagetable_t)child);
       pagetable[i] = 0;
@@ -276,7 +276,7 @@ freewalk(pagetable_t pagetable)
 }
 
 // 释放用户内存页，
-// 然后释放页表页。
+// 然后释放页表页
 void
 uvmfree(pagetable_t pagetable, uint64 sz)
 {
@@ -286,10 +286,10 @@ uvmfree(pagetable_t pagetable, uint64 sz)
 }
 
 // 给定父进程的页表，
-// 将其内存复制到子进程的页表中。
-// 同时复制页表和物理内存。
-// 成功返回0，失败返回-1。
-// 失败时释放所有已分配的页。
+// 将其内存复制到子进程的页表中
+// 同时复制页表和物理内存
+// 成功返回0，失败返回-1
+// 失败时释放所有已分配的页
 int
 uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
@@ -320,8 +320,8 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   return -1;
 }
 
-// 标记PTE对用户访问无效。
-// 由exec用于用户栈保护页。
+// 标记PTE对用户访问无效
+// 由exec用于用户栈保护页
 void
 uvmclear(pagetable_t pagetable, uint64 va)
 {
@@ -333,9 +333,9 @@ uvmclear(pagetable_t pagetable, uint64 va)
   *pte &= ~PTE_U;
 }
 
-// 从内核复制到用户。
-// 将len字节从src复制到给定页表中虚拟地址dstva。
-// 成功返回0，失败返回-1。
+// 从内核复制到用户
+// 将len字节从src复制到给定页表中虚拟地址dstva
+// 成功返回0，失败返回-1
 int
 copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 {
@@ -371,9 +371,9 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
   return 0;
 }
 
-// 从用户复制到内核。
-// 将len字节从给定页表中虚拟地址srcva复制到dst。
-// 成功返回0，失败返回-1。
+// 从用户复制到内核
+// 将len字节从给定页表中虚拟地址srcva复制到dst
+// 成功返回0，失败返回-1
 int
 copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 {
@@ -399,10 +399,10 @@ copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
   return 0;
 }
 
-// 从用户复制以null结尾的字符串到内核。
+// 从用户复制以null结尾的字符串到内核
 // 从给定页表中的虚拟地址srcva复制字节到dst，
-// 直到遇到'\0'或达到最大长度。
-// 成功返回0，失败返回-1。
+// 直到遇到'\0'或达到最大长度
+// 成功返回0，失败返回-1
 int
 copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 {
@@ -443,8 +443,8 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 }
 
 // 如果进程正在引用在sys_sbrk()中延迟分配的页，
-// 则分配并映射用户内存。
-// 如果va无效或已映射，或者物理内存不足，返回0；成功则返回物理地址。
+// 则分配并映射用户内存
+// 如果va无效或已映射，或者物理内存不足，返回0；成功则返回物理地址
 uint64
 vmfault(pagetable_t pagetable, uint64 va, int read)
 {
@@ -468,6 +468,7 @@ vmfault(pagetable_t pagetable, uint64 va, int read)
   return mem;
 }
 
+// 检查虚拟地址是否已映射
 int
 ismapped(pagetable_t pagetable, uint64 va)
 {

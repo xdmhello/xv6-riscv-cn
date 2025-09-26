@@ -1,4 +1,4 @@
-// Physical memory allocator, for user processes,
+// 物理内存分配器，用于用户进程、
 // 内核栈、页表页、
 // 和管道缓冲区。分配整个4096字节的页面。
 
